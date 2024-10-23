@@ -136,4 +136,7 @@
 #include "cpython/pyfpe.h"
 #include "cpython/tracemalloc.h"
 
+PyAPI_DATA(void) *python_opcode_targets[256];
+PyAPI_DATA(binaryfunc) python_opcode_binary_op_targets[26];
+
 #endif /* !Py_PYTHON_H */

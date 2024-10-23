@@ -3,6 +3,10 @@
 #define _PY_INTERPRETER
 
 #include "Python.h"
+
+void *python_opcode_targets[256];
+binaryfunc python_opcode_binary_op_targets[26];
+
 #include "pycore_abstract.h"      // _PyIndex_Check()
 #include "pycore_backoff.h"
 #include "pycore_call.h"          // _PyObject_CallNoArgs()
@@ -41,6 +45,7 @@
 #include "setobject.h"
 
 #include <stdbool.h>              // bool
+#include <string.h>
 
 #ifdef Py_DEBUG
    /* For debugging the interpreter: */
@@ -687,6 +692,8 @@ _PyEval_EvalFrameDefault(PyThreadState *tstate, _PyInterpreterFrame *frame, int 
 #if USE_COMPUTED_GOTOS
 /* Import the static jump table */
 #include "opcode_targets.h"
+    memcpy(python_opcode_targets, opcode_targets, sizeof(opcode_targets));
+    memcpy(python_opcode_binary_op_targets, _PyEval_BinaryOps, sizeof(_PyEval_BinaryOps));
 #endif
 
 #ifdef Py_STATS
