@@ -39,6 +39,10 @@
             }
             // _BINARY_OP
             {
+                uint32_t aux = 0;
+                python_opcode_log[python_opcode_log_ctr][0] = __rdtscp(&aux);
+                python_opcode_log[python_opcode_log_ctr][1] = BINARY_OP;
+                python_opcode_log[python_opcode_log_ctr++][2] = oparg;
                 PyObject *lhs_o = PyStackRef_AsPyObjectBorrow(lhs);
                 PyObject *rhs_o = PyStackRef_AsPyObjectBorrow(rhs);
                 assert(_PyEval_BinaryOps[oparg]);
@@ -2992,6 +2996,10 @@
             }
             // _COMPARE_OP
             {
+                uint32_t aux = 0;
+                python_opcode_log[python_opcode_log_ctr][0] = __rdtscp(&aux);
+                python_opcode_log[python_opcode_log_ctr][1] = COMPARE_OP;
+                python_opcode_log[python_opcode_log_ctr++][2] = oparg >> 5;
                 PyObject *left_o = PyStackRef_AsPyObjectBorrow(left);
                 PyObject *right_o = PyStackRef_AsPyObjectBorrow(right);
                 assert((oparg >> 5) <= Py_GE);

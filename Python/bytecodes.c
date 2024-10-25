@@ -39,7 +39,6 @@
 #include "pydtrace.h"
 #include "setobject.h"
 
-
 #define USE_COMPUTED_GOTOS 0
 #include "ceval_macros.h"
 
@@ -74,6 +73,7 @@ static uint16_t invert, counter, index, hint;
 #define unused 0  // Used in a macro def, can't be static
 static uint32_t type_version;
 static _PyExecutorObject *current_executor;
+
 
 static PyObject *
 dummy_func(
@@ -2312,6 +2312,10 @@ dummy_func(
         }
 
         op(_COMPARE_OP, (left, right -- res)) {
+            uint32_t aux = 0;
+            python_opcode_log[python_opcode_log_ctr][0] = __rdtscp(&aux);
+            python_opcode_log[python_opcode_log_ctr][1] = COMPARE_OP;
+            python_opcode_log[python_opcode_log_ctr++][2] = oparg >> 5;
             PyObject *left_o = PyStackRef_AsPyObjectBorrow(left);
             PyObject *right_o = PyStackRef_AsPyObjectBorrow(right);
 
@@ -4497,6 +4501,10 @@ dummy_func(
         }
 
         op(_BINARY_OP, (lhs, rhs -- res)) {
+            uint32_t aux = 0;
+            python_opcode_log[python_opcode_log_ctr][0] = __rdtscp(&aux);
+            python_opcode_log[python_opcode_log_ctr][1] = BINARY_OP;
+            python_opcode_log[python_opcode_log_ctr++][2] = oparg;
             PyObject *lhs_o = PyStackRef_AsPyObjectBorrow(lhs);
             PyObject *rhs_o = PyStackRef_AsPyObjectBorrow(rhs);
 
