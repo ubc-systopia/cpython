@@ -2265,6 +2265,10 @@
             oparg = CURRENT_OPARG();
             right = stack_pointer[-1];
             left = stack_pointer[-2];
+            uint32_t aux = 0;
+            python_opcode_log[python_opcode_log_ctr][0] = __rdtscp(&aux);
+            python_opcode_log[python_opcode_log_ctr][1] = COMPARE_OP;
+            python_opcode_log[python_opcode_log_ctr++][2] = oparg >> 5;
             assert((oparg >> 5) <= Py_GE);
             res = PyObject_RichCompare(left, right, oparg >> 5);
             Py_DECREF(left);
@@ -4125,6 +4129,10 @@
             oparg = CURRENT_OPARG();
             rhs = stack_pointer[-1];
             lhs = stack_pointer[-2];
+            uint32_t aux = 0;
+            python_opcode_log[python_opcode_log_ctr][0] = __rdtscp(&aux);
+            python_opcode_log[python_opcode_log_ctr][1] = BINARY_OP;
+            python_opcode_log[python_opcode_log_ctr++][2] = oparg;
             assert(_PyEval_BinaryOps[oparg]);
             res = _PyEval_BinaryOps[oparg](lhs, rhs);
             Py_DECREF(lhs);

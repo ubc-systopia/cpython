@@ -6,6 +6,8 @@
 
 void *python_opcode_targets[256];
 binaryfunc python_opcode_binary_op_targets[26];
+uint64_t python_opcode_log[1<<16][3];
+uint16_t python_opcode_log_ctr;
 
 #include "pycore_abstract.h"      // _PyIndex_Check()
 #include "pycore_backoff.h"
@@ -694,6 +696,7 @@ _PyEval_EvalFrameDefault(PyThreadState *tstate, _PyInterpreterFrame *frame, int 
 #include "opcode_targets.h"
     memcpy(python_opcode_targets, opcode_targets, sizeof(opcode_targets));
     memcpy(python_opcode_binary_op_targets, _PyEval_BinaryOps, sizeof(_PyEval_BinaryOps));
+    python_opcode_log_ctr = 0;
 #endif
 
 #ifdef Py_STATS
