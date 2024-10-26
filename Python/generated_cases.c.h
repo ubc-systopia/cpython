@@ -128,8 +128,7 @@
             }
             // _BINARY_OP
             {
-                uint32_t aux = 0;
-                python_opcode_log[python_opcode_log_ctr][0] = __rdtscp(&aux);
+                python_opcode_log[python_opcode_log_ctr][0] = python_time_callback();
                 python_opcode_log[python_opcode_log_ctr][1] = BINARY_OP;
                 python_opcode_log[python_opcode_log_ctr++][2] = oparg;
                 assert(_PyEval_BinaryOps[oparg]);
@@ -2210,8 +2209,7 @@
             }
             // _COMPARE_OP
             {
-                uint32_t aux = 0;
-                python_opcode_log[python_opcode_log_ctr][0] = __rdtscp(&aux);
+                python_opcode_log[python_opcode_log_ctr][0] = python_time_callback();
                 python_opcode_log[python_opcode_log_ctr][1] = COMPARE_OP;
                 python_opcode_log[python_opcode_log_ctr++][2] = oparg >> 5;
                 assert((oparg >> 5) <= Py_GE);

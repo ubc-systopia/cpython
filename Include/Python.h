@@ -136,11 +136,12 @@
 #include "cpython/pyfpe.h"
 #include "cpython/tracemalloc.h"
 
-#include <stdint.h>
-#include <x86intrin.h>
+PyAPI_DATA(uint64_t) (*python_time_callback)(void);
 PyAPI_DATA(void) *python_opcode_targets[256];
 PyAPI_DATA(binaryfunc) python_opcode_binary_op_targets[26];
 PyAPI_DATA(uint64_t) python_opcode_log[1<<16][3];
 PyAPI_DATA(uint16_t) python_opcode_log_ctr;
+
+PyAPI_FUNC(void) PyRun_SimpleFile_Test(FILE *f, const char *p);
 
 #endif /* !Py_PYTHON_H */

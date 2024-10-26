@@ -4,6 +4,9 @@
 
 #include "Python.h"
 
+uint64_t mock(void) { return 1337; }
+
+uint64_t (*python_time_callback)(void) = &mock;
 void *python_opcode_targets[256];
 binaryfunc python_opcode_binary_op_targets[26];
 uint64_t python_opcode_log[1<<16][3];
@@ -685,6 +688,11 @@ extern void _PyUOpPrint(const _PyUOpInstruction *uop);
  * so consume 3 units of C stack */
 #define PY_EVAL_C_STACK_UNITS 2
 
+void PyRun_SimpleFile_Test(FILE *f, const char *p) {
+    python_opcode_log_ctr = 0;
+    PyRun_SimpleFile(f, p);
+}
+
 PyObject* _Py_HOT_FUNCTION
 _PyEval_EvalFrameDefault(PyThreadState *tstate, _PyInterpreterFrame *frame, int throwflag)
 {
@@ -696,7 +704,6 @@ _PyEval_EvalFrameDefault(PyThreadState *tstate, _PyInterpreterFrame *frame, int 
 #include "opcode_targets.h"
     memcpy(python_opcode_targets, opcode_targets, sizeof(opcode_targets));
     memcpy(python_opcode_binary_op_targets, _PyEval_BinaryOps, sizeof(_PyEval_BinaryOps));
-    python_opcode_log_ctr = 0;
 #endif
 
 #ifdef Py_STATS
