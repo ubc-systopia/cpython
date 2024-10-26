@@ -2677,8 +2677,7 @@
             oparg = CURRENT_OPARG();
             right = stack_pointer[-1];
             left = stack_pointer[-2];
-            uint32_t aux = 0;
-            python_opcode_log[python_opcode_log_ctr][0] = __rdtscp(&aux);
+            python_opcode_log[python_opcode_log_ctr][0] = python_time_callback();
             python_opcode_log[python_opcode_log_ctr][1] = COMPARE_OP;
             python_opcode_log[python_opcode_log_ctr++][2] = oparg >> 5;
             PyObject *left_o = PyStackRef_AsPyObjectBorrow(left);
@@ -5113,8 +5112,7 @@
             oparg = CURRENT_OPARG();
             rhs = stack_pointer[-1];
             lhs = stack_pointer[-2];
-            uint32_t aux = 0;
-            python_opcode_log[python_opcode_log_ctr][0] = __rdtscp(&aux);
+            python_opcode_log[python_opcode_log_ctr][0] = python_time_callback();
             python_opcode_log[python_opcode_log_ctr][1] = BINARY_OP;
             python_opcode_log[python_opcode_log_ctr++][2] = oparg;
             PyObject *lhs_o = PyStackRef_AsPyObjectBorrow(lhs);
