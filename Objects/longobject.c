@@ -3796,6 +3796,9 @@ long_add_method(PyObject *a, PyObject *b)
 static PyLongObject *
 long_sub(PyLongObject *a, PyLongObject *b)
 {
+    python_opcode_log[python_opcode_log_ctr][0] = python_rdtscp();
+    python_opcode_log[python_opcode_log_ctr][1] = INSTR_SUB;
+    python_opcode_log[python_opcode_log_ctr++][2] = 0;
     if (_PyLong_BothAreCompact(a, b)) {
         return _PyLong_FromSTwoDigits(medium_value(a) - medium_value(b));
     }
@@ -4494,6 +4497,9 @@ l_mod(PyLongObject *v, PyLongObject *w, PyLongObject **pmod)
 static PyObject *
 long_div(PyObject *a, PyObject *b)
 {
+    python_opcode_log[python_opcode_log_ctr][0] = python_rdtscp();
+    python_opcode_log[python_opcode_log_ctr][1] = INSTR_DIV;
+    python_opcode_log[python_opcode_log_ctr++][2] = 0;
     PyLongObject *div;
 
     CHECK_BINOP(a, b);
