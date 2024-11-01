@@ -505,6 +505,9 @@
             PyObject *res;
             right = stack_pointer[-1];
             left = stack_pointer[-2];
+            python_opcode_log[python_opcode_log_ctr][0] = python_rdtscp();
+            python_opcode_log[python_opcode_log_ctr][1] = BINARY_OP_SUBTRACT_INT;
+            python_opcode_log[python_opcode_log_ctr++][2] = 0;
             STAT_INC(BINARY_OP, hit);
             res = _PyLong_Subtract((PyLongObject *)left, (PyLongObject *)right);
             _Py_DECREF_SPECIALIZED(right, (destructor)PyObject_Free);
@@ -2265,9 +2268,6 @@
             oparg = CURRENT_OPARG();
             right = stack_pointer[-1];
             left = stack_pointer[-2];
-            python_opcode_log[python_opcode_log_ctr][0] = python_time_callback();
-            python_opcode_log[python_opcode_log_ctr][1] = COMPARE_OP;
-            python_opcode_log[python_opcode_log_ctr++][2] = oparg >> 5;
             assert((oparg >> 5) <= Py_GE);
             res = PyObject_RichCompare(left, right, oparg >> 5);
             Py_DECREF(left);
@@ -2312,6 +2312,9 @@
             oparg = CURRENT_OPARG();
             right = stack_pointer[-1];
             left = stack_pointer[-2];
+            python_opcode_log[python_opcode_log_ctr][0] = python_rdtscp();
+            python_opcode_log[python_opcode_log_ctr][1] = COMPARE_OP_INT;
+            python_opcode_log[python_opcode_log_ctr++][2] = oparg >> 5;
             if (!_PyLong_IsCompact((PyLongObject *)left)) {
                 UOP_STAT_INC(uopcode, miss);
                 JUMP_TO_JUMP_TARGET();
@@ -2326,6 +2329,9 @@
             Py_ssize_t ileft = _PyLong_CompactValue((PyLongObject *)left);
             Py_ssize_t iright = _PyLong_CompactValue((PyLongObject *)right);
             // 2 if <, 4 if >, 8 if ==; this matches the low 4 bits of the oparg
+            python_opcode_log[python_opcode_log_ctr][0] = python_rdtscp();
+            python_opcode_log[python_opcode_log_ctr][1] = INSTR_EQ_SPEC;
+            python_opcode_log[python_opcode_log_ctr++][2] = oparg >> 5;
             int sign_ish = COMPARISON_BIT(ileft, iright);
             _Py_DECREF_SPECIALIZED(left, (destructor)PyObject_Free);
             _Py_DECREF_SPECIALIZED(right, (destructor)PyObject_Free);
@@ -4128,9 +4134,6 @@
             oparg = CURRENT_OPARG();
             rhs = stack_pointer[-1];
             lhs = stack_pointer[-2];
-            python_opcode_log[python_opcode_log_ctr][0] = python_time_callback();
-            python_opcode_log[python_opcode_log_ctr][1] = BINARY_OP;
-            python_opcode_log[python_opcode_log_ctr++][2] = oparg;
             assert(_PyEval_BinaryOps[oparg]);
             res = _PyEval_BinaryOps[oparg](lhs, rhs);
             Py_DECREF(lhs);

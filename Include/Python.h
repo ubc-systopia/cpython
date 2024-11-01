@@ -136,12 +136,20 @@
 #include "cpython/pyfpe.h"
 #include "cpython/tracemalloc.h"
 
-PyAPI_DATA(uint64_t) (*python_time_callback)(void);
+inline __attribute__((always_inline)) uint64_t python_rdtscp(void) {
+	uint64_t low, high;
+	__asm__ volatile("rdtscp" : "=a"(low), "=d"(high) : : "rbx", "rcx");
+	return ((high << 32) | low);
+}
+
 PyAPI_DATA(void) *python_opcode_targets[256];
 PyAPI_DATA(binaryfunc) python_opcode_binary_op_targets[26];
 PyAPI_DATA(uint64_t) python_opcode_log[1<<16][3];
 PyAPI_DATA(uint16_t) python_opcode_log_ctr;
 
-PyAPI_FUNC(void) PyRun_SimpleFile_Test(FILE *f, const char *p);
+#define INSTR_DIV       0
+#define INSTR_SUB       1
+#define INSTR_EQ        2
+#define INSTR_EQ_SPEC   3
 
 #endif /* !Py_PYTHON_H */
