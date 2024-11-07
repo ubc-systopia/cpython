@@ -3790,9 +3790,11 @@ long_add(PyLongObject *a, PyLongObject *b)
 PyObject *
 _PyLong_Subtract(PyLongObject *a, PyLongObject *b)
 {
+    #if ENABLE_INSTR
     python_opcode_log[python_opcode_log_ctr][0] = python_rdtscp();
     python_opcode_log[python_opcode_log_ctr][1] = INSTR_SUB;
-    python_opcode_log[python_opcode_log_ctr++][2] = 0;
+    python_opcode_log[python_opcode_log_ctr++][2] = &long_sub;
+    #endif
 
     PyLongObject *z;
 
@@ -4482,9 +4484,11 @@ l_mod(PyLongObject *v, PyLongObject *w, PyLongObject **pmod)
 static PyObject *
 long_div(PyObject *a, PyObject *b)
 {
+    #if ENABLE_INSTR
     python_opcode_log[python_opcode_log_ctr][0] = python_rdtscp();
     python_opcode_log[python_opcode_log_ctr][1] = INSTR_DIV;
-    python_opcode_log[python_opcode_log_ctr++][2] = 0;
+    python_opcode_log[python_opcode_log_ctr++][2] = &long_div;
+    #endif
 
     PyLongObject *div;
 
@@ -4885,11 +4889,19 @@ long_invmod(PyLongObject *a, PyLongObject *n)
     return NULL;
 }
 
+#if ENABLE_INSTR
+void *python_language_feature_targets[2];
+#endif
 
 /* pow(v, w, x) */
 static PyObject *
 long_pow(PyObject *v, PyObject *w, PyObject *x)
 {
+    #if ENABLE_INSTR
+    python_language_feature_targets[0] = &&low;
+    python_language_feature_targets[1] = &&high;
+    #endif
+
     PyLongObject *a, *b, *c; /* a,b,c = v,w,x */
     int negativeOutput = 0;  /* if x<0 return negative output */
 
@@ -5074,8 +5086,10 @@ long_pow(PyObject *v, PyObject *w, PyObject *x)
         }
         for (--i, bit >>= 1;;) {
             for (; bit != 0; bit >>= 1) {
+                low:
                 MULT(z, z, z);
                 if (bi & bit) {
+                    high:
                     MULT(z, a, z);
                 }
             }

@@ -4,10 +4,12 @@
 
 #include "Python.h"
 
+#if ENABLE_INSTR
 void *python_opcode_targets[256];
 binaryfunc python_opcode_binary_op_targets[26];
 uint64_t python_opcode_log[1<<16][3];
 uint16_t python_opcode_log_ctr;
+#endif
 
 #include "pycore_abstract.h"      // _PyIndex_Check()
 #include "pycore_backoff.h"
@@ -694,8 +696,12 @@ _PyEval_EvalFrameDefault(PyThreadState *tstate, _PyInterpreterFrame *frame, int 
 #if USE_COMPUTED_GOTOS
 /* Import the static jump table */
 #include "opcode_targets.h"
+
+#if ENABLE_INSTR
     memcpy(python_opcode_targets, opcode_targets, sizeof(opcode_targets));
     memcpy(python_opcode_binary_op_targets, _PyEval_BinaryOps, sizeof(_PyEval_BinaryOps));
+#endif
+
 #endif
 
 #ifdef Py_STATS

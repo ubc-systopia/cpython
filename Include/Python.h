@@ -136,6 +136,9 @@
 #include "cpython/pyfpe.h"
 #include "cpython/tracemalloc.h"
 
+#define ENABLE_INSTR    1
+
+#if ENABLE_INSTR
 inline __attribute__((always_inline)) uint64_t python_rdtscp(void) {
 	uint64_t low, high;
 	__asm__ volatile("rdtscp" : "=a"(low), "=d"(high) : : "rbx", "rcx");
@@ -146,10 +149,13 @@ PyAPI_DATA(void) *python_opcode_targets[256];
 PyAPI_DATA(binaryfunc) python_opcode_binary_op_targets[26];
 PyAPI_DATA(uint64_t) python_opcode_log[1<<16][3];
 PyAPI_DATA(uint16_t) python_opcode_log_ctr;
+PyAPI_DATA(void) *python_language_feature_targets[2];
+
 
 #define INSTR_DIV       0
 #define INSTR_SUB       1
 #define INSTR_EQ        2
 #define INSTR_EQ_SPEC   3
+#endif
 
 #endif /* !Py_PYTHON_H */
