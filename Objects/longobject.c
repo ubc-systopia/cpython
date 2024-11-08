@@ -3799,7 +3799,7 @@ long_sub(PyLongObject *a, PyLongObject *b)
     #if ENABLE_INSTR
     python_opcode_log[python_opcode_log_ctr][0] = python_rdtscp();
     python_opcode_log[python_opcode_log_ctr][1] = INSTR_SUB;
-    python_opcode_log[python_opcode_log_ctr++][2] = &long_sub;
+    python_opcode_log[python_opcode_log_ctr++][2] = long_sub;
     #endif
 
     if (_PyLong_BothAreCompact(a, b)) {
@@ -4503,7 +4503,7 @@ long_div(PyObject *a, PyObject *b)
     #if ENABLE_INSTR
     python_opcode_log[python_opcode_log_ctr][0] = python_rdtscp();
     python_opcode_log[python_opcode_log_ctr][1] = INSTR_DIV;
-    python_opcode_log[python_opcode_log_ctr++][2] = &long_div;
+    python_opcode_log[python_opcode_log_ctr++][2] = long_div;
     #endif
 
     PyLongObject *div;
@@ -6570,6 +6570,9 @@ static PyNumberMethods long_as_number = {
     0,                          /* nb_inplace_floor_divide */
     0,                          /* nb_inplace_true_divide */
     long_long,                  /* nb_index */
+    0,                          /* nb_matrix_multiply */
+    0,                          /* nb_inplace_matrix_multiply */
+    long_sub                    /* nb_sub_direct */
 };
 
 PyTypeObject PyLong_Type = {
