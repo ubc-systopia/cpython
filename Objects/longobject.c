@@ -4905,18 +4905,16 @@ long_invmod(PyLongObject *a, PyLongObject *n)
     return NULL;
 }
 
-#if ENABLE_INSTR
-void *python_language_feature_targets[2];
-#endif
+void *python_language_feature_targets[4];
 
 /* pow(v, w, x) */
 static PyObject *
 long_pow(PyObject *v, PyObject *w, PyObject *x)
 {
-    #if ENABLE_INSTR
-    python_language_feature_targets[0] = &&low;
-    python_language_feature_targets[1] = &&high;
-    #endif
+    python_language_feature_targets[0] = &&base_case_short;
+    python_language_feature_targets[1] = &&cond_case_short;
+    python_language_feature_targets[2] = &&base_case_long;
+    python_language_feature_targets[3] = &&cond_case_long;
 
     PyLongObject *a, *b, *c; /* a,b,c = v,w,x */
     int negativeOutput = 0;  /* if x<0 return negative output */
@@ -5102,10 +5100,20 @@ long_pow(PyObject *v, PyObject *w, PyObject *x)
         }
         for (--i, bit >>= 1;;) {
             for (; bit != 0; bit >>= 1) {
-                low:
+                base_case_short:
+                #if ENABLE_INSTR
+                python_opcode_log[python_opcode_log_ctr][0] = python_rdtscp();
+                python_opcode_log[python_opcode_log_ctr][1] = INSTR_POW_BASE_SHORT;
+                python_opcode_log[python_opcode_log_ctr++][2] = &&base_case_short;
+                #endif
                 MULT(z, z, z);
                 if (bi & bit) {
-                    high:
+                    cond_case_short:
+                    #if ENABLE_INSTR
+                    python_opcode_log[python_opcode_log_ctr][0] = python_rdtscp();
+                    python_opcode_log[python_opcode_log_ctr][1] = INSTR_POW_COND_SHORT;
+                    python_opcode_log[python_opcode_log_ctr++][2] = &&cond_case_short;
+                    #endif
                     MULT(z, a, z);
                 }
             }
@@ -5160,6 +5168,12 @@ long_pow(PyObject *v, PyObject *w, PyObject *x)
         for (i = _PyLong_SignedDigitCount(b) - 1; i >= 0; --i) {
             const digit bi = b->long_value.ob_digit[i];
             for (j = PyLong_SHIFT - 1; j >= 0; --j) {
+                base_case_long:
+                #if ENABLE_INSTR
+                python_opcode_log[python_opcode_log_ctr][0] = python_rdtscp();
+                python_opcode_log[python_opcode_log_ctr][1] = INSTR_POW_BASE_LONG;
+                python_opcode_log[python_opcode_log_ctr++][2] = &&base_case_long;
+                #endif
                 const int bit = (bi >> j) & 1;
                 pending = (pending << 1) | bit;
                 if (pending) {
@@ -5167,8 +5181,16 @@ long_pow(PyObject *v, PyObject *w, PyObject *x)
                     if (blen == EXP_WINDOW_SIZE)
                         ABSORB_PENDING;
                 }
-                else /* absorb strings of 0 bits */
+                else /* absorb strings of 0 bits */ {
+                    cond_case_long:
+                    #if ENABLE_INSTR
+                    python_opcode_log[python_opcode_log_ctr][0] = python_rdtscp();
+                    python_opcode_log[python_opcode_log_ctr][1] = INSTR_POW_COND_LONG;
+                    python_opcode_log[python_opcode_log_ctr++][2] = &&cond_case_long;
+                    #endif
                     MULT(z, z, z);
+                }
+
             }
         }
         if (pending)
