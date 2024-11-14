@@ -104,12 +104,58 @@ do { \
 #define QSBR_QUIESCENT_STATE(tstate)
 #endif
 
+#if ENABLE_IBPB
+#include <sched.h>
+#include <fcntl.h>
+#include <unistd.h>
+
+void wrmsr_IBPB(uint32_t reg, const char* regvals) {
+    uint64_t data;
+    int fd;
+    char msr_file_name[64];
+    uint32_t cpu;
+    getcpu(&cpu, NULL);
+
+    sprintf(msr_file_name, "/dev/cpu/%d/msr", cpu);
+    fd = open(msr_file_name, O_WRONLY);
+    if (fd < 0) {
+           if (errno == ENXIO) {
+               printf("wrmsr: No CPU %d\n", cpu);
+           } else if (errno == EIO) {
+               printf("wrmsr: CPU %d doesn't support MSRs\n", cpu);
+           } else {
+               printf("wrmsr: open\n");
+           }
+    }
+
+    data = strtoull(regvals, NULL, 0);
+    if (pwrite(fd, &data, sizeof data, reg) != sizeof data) {
+        if (errno == EIO) {
+            printf(
+                "wrmsr: CPU %d cannot set MSR "
+                "0x%08x to 0x%016lx\n",
+                cpu, reg, data);
+        } else {
+            printf("wrmsr: pwrite\n");
+        }
+    }
+
+    close(fd);
+
+    return;
+}
+#define IBPB() { wrmsr_IBPB(73, "0x1");}
+#else
+#define IBPB() {}
+#endif
+
 
 /* Do interpreter dispatch accounting for tracing and instrumentation */
 #define DISPATCH() \
     { \
         NEXTOPARG(); \
         PRE_DISPATCH_GOTO(); \
+        IBPB(); \
         DISPATCH_GOTO(); \
     }
 

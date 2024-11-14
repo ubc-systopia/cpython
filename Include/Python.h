@@ -138,6 +138,7 @@
 #include "cpython/tracemalloc.h"
 
 #define ENABLE_INSTR    1
+#define ENABLE_IBPB     0
 
 #define INSTR_DIV               0 << 8
 #define INSTR_SUB               1 << 8
