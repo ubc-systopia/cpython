@@ -4889,7 +4889,9 @@ long_invmod(PyLongObject *a, PyLongObject *n)
     return NULL;
 }
 
+#if ENABLE_INSTR
 void *python_language_feature_targets[7];
+#endif
 
 /* pow(v, w, x) */
 static PyObject *
@@ -4914,6 +4916,7 @@ long_pow(PyObject *v, PyObject *w, PyObject *x)
     PyLongObject *table[EXP_TABLE_LEN];
     Py_ssize_t num_table_entries = 0;
 
+	#if ENABLE_INSTR
     python_language_feature_targets[0] = &&base_case_short;
     python_language_feature_targets[1] = &&cond_case_short;
     python_language_feature_targets[2] = &&consume_zero;
@@ -4921,6 +4924,7 @@ long_pow(PyObject *v, PyObject *w, PyObject *x)
     python_language_feature_targets[4] = &&absorb_rest;
     python_language_feature_targets[5] = &&absorb_trailing_window;
     python_language_feature_targets[6] = &&absorb_trailing_rest;
+	#endif
 
     /* a, b, c = v, w, x */
     CHECK_BINOP(v, w);
