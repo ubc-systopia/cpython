@@ -4889,17 +4889,12 @@ long_invmod(PyLongObject *a, PyLongObject *n)
     return NULL;
 }
 
-void *python_language_feature_targets[4];
+void *python_language_feature_targets[7];
 
 /* pow(v, w, x) */
 static PyObject *
 long_pow(PyObject *v, PyObject *w, PyObject *x)
 {
-    python_language_feature_targets[0] = &&base_case_short;
-    python_language_feature_targets[1] = &&cond_case_short;
-    python_language_feature_targets[2] = &&base_case_long;
-    python_language_feature_targets[3] = &&cond_case_long;
-
     PyLongObject *a, *b, *c; /* a,b,c = v,w,x */
     int negativeOutput = 0;  /* if x<0 return negative output */
 
@@ -4918,6 +4913,14 @@ long_pow(PyObject *v, PyObject *w, PyObject *x)
      */
     PyLongObject *table[EXP_TABLE_LEN];
     Py_ssize_t num_table_entries = 0;
+
+    python_language_feature_targets[0] = &&base_case_short;
+    python_language_feature_targets[1] = &&cond_case_short;
+    python_language_feature_targets[2] = &&consume_zero;
+    python_language_feature_targets[3] = &&absorb_window;
+    python_language_feature_targets[4] = &&absorb_rest;
+    python_language_feature_targets[5] = &&absorb_trailing_window;
+    python_language_feature_targets[6] = &&absorb_trailing_rest;
 
     /* a, b, c = v, w, x */
     CHECK_BINOP(v, w);
@@ -5128,7 +5131,28 @@ long_pow(PyObject *v, PyObject *w, PyObject *x)
          * length of `pending` is `blen`.
          */
         int pending = 0, blen = 0;
-#define ABSORB_PENDING  do { \
+
+#if ENABLE_INSTR
+    #define INSTR_WINDOW(instr, suffix) absorb_##suffix: {\
+        python_opcode_log[python_opcode_log_ctr][0] = python_rdtscp(); \
+        python_opcode_log[python_opcode_log_ctr][1] = instr; \
+        python_opcode_log[python_opcode_log_ctr++][2] = &&absorb_##suffix; \
+    }
+#else
+    #define INSTR_WINDOW(instr, suffix) {}
+#endif
+
+#if ENABLE_INSTR
+    #define INSTR_TRAILING(instr, suffix) absorb_trailing_##suffix: {\
+        python_opcode_log[python_opcode_log_ctr][0] = python_rdtscp(); \
+        python_opcode_log[python_opcode_log_ctr][1] = instr; \
+        python_opcode_log[python_opcode_log_ctr++][2] = &&absorb_trailing_##suffix; \
+    }
+#else
+    #define INSTR_TRAILING(instr, suffix) {}
+#endif
+
+#define ABSORB_PENDING(suffix, window_instr, trailing_instr) do { \
             int ntz = 0; /* number of trailing zeroes in `pending` */ \
             assert(pending && blen); \
             assert(pending >> (blen - 1)); \
@@ -5140,11 +5164,14 @@ long_pow(PyObject *v, PyObject *w, PyObject *x)
             assert(ntz < blen); \
             blen -= ntz; \
             do { \
+                INSTR_WINDOW(window_instr, suffix) \
                 MULT(z, z, z); \
             } while (--blen); \
             MULT(z, table[pending >> 1], z); \
-            while (ntz-- > 0) \
+            while (ntz-- > 0) {\
+				INSTR_TRAILING(trailing_instr, suffix) \
                 MULT(z, z, z); \
+            } \
             assert(blen == 0); \
             pending = 0; \
         } while(0)
@@ -5152,25 +5179,19 @@ long_pow(PyObject *v, PyObject *w, PyObject *x)
         for (i = _PyLong_SignedDigitCount(b) - 1; i >= 0; --i) {
             const digit bi = b->long_value.ob_digit[i];
             for (j = PyLong_SHIFT - 1; j >= 0; --j) {
-                base_case_long:
-                #if ENABLE_INSTR
-                python_opcode_log[python_opcode_log_ctr][0] = python_rdtscp();
-                python_opcode_log[python_opcode_log_ctr][1] = INSTR_POW_BASE_LONG;
-                python_opcode_log[python_opcode_log_ctr++][2] = &&base_case_long;
-                #endif
                 const int bit = (bi >> j) & 1;
                 pending = (pending << 1) | bit;
                 if (pending) {
                     ++blen;
                     if (blen == EXP_WINDOW_SIZE)
-                        ABSORB_PENDING;
+                        ABSORB_PENDING(window, INSTR_POW_WINDOW, INSTR_POW_TRAILING);
                 }
                 else /* absorb strings of 0 bits */ {
-                    cond_case_long:
                     #if ENABLE_INSTR
+                    consume_zero:
                     python_opcode_log[python_opcode_log_ctr][0] = python_rdtscp();
-                    python_opcode_log[python_opcode_log_ctr][1] = INSTR_POW_COND_LONG;
-                    python_opcode_log[python_opcode_log_ctr++][2] = &&cond_case_long;
+                    python_opcode_log[python_opcode_log_ctr][1] = INSTR_POW_ZERO;
+                    python_opcode_log[python_opcode_log_ctr++][2] = &&consume_zero;
                     #endif
                     MULT(z, z, z);
                 }
@@ -5178,7 +5199,7 @@ long_pow(PyObject *v, PyObject *w, PyObject *x)
             }
         }
         if (pending)
-            ABSORB_PENDING;
+            ABSORB_PENDING(rest, INSTR_POW_WINDOW_REST, INSTR_POW_TRAILING_REST);
     }
 
     if (negativeOutput && !_PyLong_IsZero(z)) {
