@@ -3793,7 +3793,7 @@ _PyLong_Subtract(PyLongObject *a, PyLongObject *b)
     #if ENABLE_INSTR
     python_opcode_log[python_opcode_log_ctr][0] = python_rdtscp();
     python_opcode_log[python_opcode_log_ctr][1] = INSTR_SUB;
-    python_opcode_log[python_opcode_log_ctr++][2] = long_sub;
+    python_opcode_log[python_opcode_log_ctr++][2] = _PyLong_Subtract;
     #endif
 
     PyLongObject *z;
@@ -6651,7 +6651,7 @@ static PyNumberMethods long_as_number = {
     long_long,                  /* nb_index */
     0,                          /* nb_matrix_multiply */
     0,                          /* nb_inplace_matrix_multiply */
-    long_sub                    /* nb_sub_direct */
+    (binaryfunc)long_sub        /* nb_sub_direct */
 };
 
 PyTypeObject PyLong_Type = {
