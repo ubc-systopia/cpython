@@ -688,6 +688,8 @@ extern void _PyUOpPrint(const _PyUOpInstruction *uop);
  * so consume 3 units of C stack */
 #define PY_EVAL_C_STACK_UNITS 2
 
+#include "opcode_export.h"
+
 PyObject* _Py_HOT_FUNCTION
 _PyEval_EvalFrameDefault(PyThreadState *tstate, _PyInterpreterFrame *frame, int throwflag)
 {
@@ -697,10 +699,6 @@ _PyEval_EvalFrameDefault(PyThreadState *tstate, _PyInterpreterFrame *frame, int 
 #if USE_COMPUTED_GOTOS
 /* Import the static jump table */
 #include "opcode_targets.h"
-#if ENABLE_INSTR
-    memcpy(python_opcode_targets, opcode_targets, sizeof(opcode_targets));
-    memcpy(python_opcode_binary_op_targets, _PyEval_BinaryOps, sizeof(_PyEval_BinaryOps));
-#endif
 #endif
 
 #ifdef Py_STATS
@@ -805,7 +803,7 @@ resume_frame:
      * as happens in the standard instruction prologue.
      */
 #if USE_COMPUTED_GOTOS
-        TARGET_INSTRUMENTED_LINE:
+        TARGET_INSTRUMENTED_LINE: __asm("TARGET_INSTRUMENTED_LINE:");
 #else
         case INSTRUMENTED_LINE:
 #endif

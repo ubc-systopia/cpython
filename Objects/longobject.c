@@ -4890,7 +4890,16 @@ long_invmod(PyLongObject *a, PyLongObject *n)
 }
 
 #if ENABLE_INSTR
-void *python_language_feature_targets[7];
+extern void *base_case_short, *cond_case_short, *consume_zero, *absorb_window, *absorb_rest, *absorb_trailing_window, *absorb_trailing_rest;
+void *python_language_feature_targets[7] = {
+	&base_case_short,
+	&cond_case_short,
+	&consume_zero,
+	&absorb_window,
+	&absorb_rest,
+	&absorb_trailing_window,
+	&absorb_trailing_rest
+};
 #endif
 
 /* pow(v, w, x) */
@@ -4915,16 +4924,6 @@ long_pow(PyObject *v, PyObject *w, PyObject *x)
      */
     PyLongObject *table[EXP_TABLE_LEN];
     Py_ssize_t num_table_entries = 0;
-
-	#if ENABLE_INSTR
-    python_language_feature_targets[0] = &&base_case_short;
-    python_language_feature_targets[1] = &&cond_case_short;
-    python_language_feature_targets[2] = &&consume_zero;
-    python_language_feature_targets[3] = &&absorb_window;
-    python_language_feature_targets[4] = &&absorb_rest;
-    python_language_feature_targets[5] = &&absorb_trailing_window;
-    python_language_feature_targets[6] = &&absorb_trailing_rest;
-	#endif
 
     /* a, b, c = v, w, x */
     CHECK_BINOP(v, w);
@@ -5091,19 +5090,19 @@ long_pow(PyObject *v, PyObject *w, PyObject *x)
         }
         for (--i, bit >>= 1;;) {
             for (; bit != 0; bit >>= 1) {
-                base_case_short:
                 #if ENABLE_INSTR
+				__asm("base_case_short:");
                 python_opcode_log[python_opcode_log_ctr][0] = python_rdtscp();
                 python_opcode_log[python_opcode_log_ctr][1] = INSTR_POW_BASE_SHORT;
-                python_opcode_log[python_opcode_log_ctr++][2] = &&base_case_short;
+                python_opcode_log[python_opcode_log_ctr++][2] = INSTR_POW_COND_SHORT;
                 #endif
                 MULT(z, z, z);
                 if (bi & bit) {
-                    cond_case_short:
                     #if ENABLE_INSTR
+                    __asm("cond_case_short:");
                     python_opcode_log[python_opcode_log_ctr][0] = python_rdtscp();
                     python_opcode_log[python_opcode_log_ctr][1] = INSTR_POW_COND_SHORT;
-                    python_opcode_log[python_opcode_log_ctr++][2] = &&cond_case_short;
+                    python_opcode_log[python_opcode_log_ctr++][2] = INSTR_POW_COND_SHORT;
                     #endif
                     MULT(z, a, z);
                 }
@@ -5137,21 +5136,19 @@ long_pow(PyObject *v, PyObject *w, PyObject *x)
         int pending = 0, blen = 0;
 
 #if ENABLE_INSTR
-    #define INSTR_WINDOW(instr, suffix) absorb_##suffix: {\
+    #define INSTR_WINDOW(instr, suffix) __asm("absorb_" #suffix ":"); \
         python_opcode_log[python_opcode_log_ctr][0] = python_rdtscp(); \
         python_opcode_log[python_opcode_log_ctr][1] = instr; \
-        python_opcode_log[python_opcode_log_ctr++][2] = &&absorb_##suffix; \
-    }
+        python_opcode_log[python_opcode_log_ctr++][2] = instr;
 #else
     #define INSTR_WINDOW(instr, suffix) {}
 #endif
 
 #if ENABLE_INSTR
-    #define INSTR_TRAILING(instr, suffix) absorb_trailing_##suffix: {\
+    #define INSTR_TRAILING(instr, suffix) __asm("absorb_trailing_" #suffix ":"); \
         python_opcode_log[python_opcode_log_ctr][0] = python_rdtscp(); \
         python_opcode_log[python_opcode_log_ctr][1] = instr; \
-        python_opcode_log[python_opcode_log_ctr++][2] = &&absorb_trailing_##suffix; \
-    }
+        python_opcode_log[python_opcode_log_ctr++][2] = instr;
 #else
     #define INSTR_TRAILING(instr, suffix) {}
 #endif
@@ -5192,10 +5189,10 @@ long_pow(PyObject *v, PyObject *w, PyObject *x)
                 }
                 else /* absorb strings of 0 bits */ {
                     #if ENABLE_INSTR
-                    consume_zero:
+                    __asm("consume_zero:");
                     python_opcode_log[python_opcode_log_ctr][0] = python_rdtscp();
                     python_opcode_log[python_opcode_log_ctr][1] = INSTR_POW_ZERO;
-                    python_opcode_log[python_opcode_log_ctr++][2] = &&consume_zero;
+                    python_opcode_log[python_opcode_log_ctr++][2] = INSTR_POW_ZERO;
                     #endif
                     MULT(z, z, z);
                 }

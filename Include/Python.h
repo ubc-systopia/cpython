@@ -153,7 +153,6 @@
 
 #if ENABLE_INSTR
 PyAPI_DATA(void) *python_opcode_targets[256];
-PyAPI_DATA(binaryfunc) python_opcode_binary_op_targets[26];
 PyAPI_DATA(void) *python_language_feature_targets[7];
 
 inline __attribute__((always_inline)) uint64_t python_rdtscp(void) {
