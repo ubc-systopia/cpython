@@ -1014,7 +1014,7 @@ do_richcompare(PyThreadState *tstate, PyObject *v, PyObject *w, int op)
 PyObject *
 PyObject_RichCompare(PyObject *v, PyObject *w, int op)
 {
-    #if ENABLE_INSTR
+    #if ENABLE_GT
     python_opcode_log[python_opcode_log_ctr][0] = python_rdtscp();
     python_opcode_log[python_opcode_log_ctr][1] = INSTR_EQ;
     python_opcode_log[python_opcode_log_ctr++][2] = op;

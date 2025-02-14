@@ -505,7 +505,7 @@
             PyObject *res;
             right = stack_pointer[-1];
             left = stack_pointer[-2];
-            #if ENABLE_INSTR
+            #if ENABLE_GT
             python_opcode_log[python_opcode_log_ctr][0] = python_rdtscp();
             python_opcode_log[python_opcode_log_ctr][1] = BINARY_OP_SUBTRACT_INT;
             python_opcode_log[python_opcode_log_ctr++][2] = 0;
@@ -2314,7 +2314,7 @@
             oparg = CURRENT_OPARG();
             right = stack_pointer[-1];
             left = stack_pointer[-2];
-            #if ENABLE_INSTR
+            #if ENABLE_GT
             python_opcode_log[python_opcode_log_ctr][0] = python_rdtscp();
             python_opcode_log[python_opcode_log_ctr][1] = COMPARE_OP_INT;
             python_opcode_log[python_opcode_log_ctr++][2] = oparg >> 5;
@@ -2333,7 +2333,7 @@
             Py_ssize_t ileft = _PyLong_CompactValue((PyLongObject *)left);
             Py_ssize_t iright = _PyLong_CompactValue((PyLongObject *)right);
             // 2 if <, 4 if >, 8 if ==; this matches the low 4 bits of the oparg
-            #if ENABLE_INSTR
+            #if ENABLE_GT
             python_opcode_log[python_opcode_log_ctr][0] = python_rdtscp();
             python_opcode_log[python_opcode_log_ctr][1] = INSTR_EQ_SPEC;
             python_opcode_log[python_opcode_log_ctr++][2] = oparg >> 5;

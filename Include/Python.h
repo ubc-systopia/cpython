@@ -137,6 +137,7 @@
 #include "cpython/tracemalloc.h"
 
 #define ENABLE_INSTR    1
+#define ENABLE_GT		1
 #define ENABLE_IBPB     0
 
 #define INSTR_DIV                           0 << 8
@@ -154,7 +155,9 @@
 #if ENABLE_INSTR
 PyAPI_DATA(void) *python_opcode_targets[256];
 PyAPI_DATA(void) *python_language_feature_targets[7];
+#endif
 
+#if ENABLE_GT
 inline __attribute__((always_inline)) uint64_t python_rdtscp(void) {
 	uint64_t low, high;
 	__asm__ volatile("rdtscp" : "=a"(low), "=d"(high) : : "rbx", "rcx");
