@@ -166,6 +166,9 @@ inline __attribute__((always_inline)) uint64_t python_rdtscp(void) {
 
 PyAPI_DATA(uint64_t) python_opcode_log[1<<16][3];
 PyAPI_DATA(uint16_t) python_opcode_log_ctr;
+PyAPI_DATA(uint16_t) python_opcode_log_ctr;
+
+PyAPI_DATA(void) *python_opcode_target_sub;
 #endif
 
 #endif /* !Py_PYTHON_H */

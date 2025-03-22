@@ -10,6 +10,10 @@ binaryfunc python_opcode_binary_op_targets[26];
 uint64_t python_opcode_log[1<<16][3];
 uint16_t python_opcode_log_ctr;
 
+extern void *TARGET_BINARY_OP_SUB;
+void *python_opcode_target_sub = &TARGET_BINARY_OP_SUB;
+
+#include "opcode_export.h"
 #include <string.h>
 #endif
 
@@ -687,8 +691,6 @@ extern void _PyUOpPrint(const _PyUOpInstruction *uop);
 /* _PyEval_EvalFrameDefault() is a *big* function,
  * so consume 3 units of C stack */
 #define PY_EVAL_C_STACK_UNITS 2
-
-#include "opcode_export.h"
 
 PyObject* _Py_HOT_FUNCTION
 _PyEval_EvalFrameDefault(PyThreadState *tstate, _PyInterpreterFrame *frame, int throwflag)

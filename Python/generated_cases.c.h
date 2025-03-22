@@ -134,6 +134,7 @@
             // _BINARY_OP
             {
                 assert(_PyEval_BinaryOps[oparg]);
+                __asm("TARGET_BINARY_OP_SUB:");
                 res = _PyEval_BinaryOps[oparg](lhs, rhs);
                 Py_DECREF(lhs);
                 Py_DECREF(rhs);
