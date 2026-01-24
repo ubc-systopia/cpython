@@ -2333,11 +2333,6 @@
             Py_ssize_t ileft = _PyLong_CompactValue((PyLongObject *)left);
             Py_ssize_t iright = _PyLong_CompactValue((PyLongObject *)right);
             // 2 if <, 4 if >, 8 if ==; this matches the low 4 bits of the oparg
-            #if ENABLE_GT
-            python_opcode_log[python_opcode_log_ctr][0] = python_rdtscp();
-            python_opcode_log[python_opcode_log_ctr][1] = INSTR_EQ_SPEC;
-            python_opcode_log[python_opcode_log_ctr++][2] = oparg >> 5;
-            #endif
             int sign_ish = COMPARISON_BIT(ileft, iright);
             _Py_DECREF_SPECIALIZED(left, (destructor)PyObject_Free);
             _Py_DECREF_SPECIALIZED(right, (destructor)PyObject_Free);
