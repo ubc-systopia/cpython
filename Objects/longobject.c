@@ -4878,7 +4878,7 @@ long_invmod(PyLongObject *a, PyLongObject *n)
 }
 
 #if ENABLE_INSTR
-extern void *consume_zero, *absorb_window, *absorb_trailing, *absorb_rest_window, absorb_rest_trailing;
+extern void *consume_zero, *absorb_window, *absorb_trailing, *absorb_rest_window, *absorb_rest_trailing;
 void *python_language_feature_targets[5] = {
 	&consume_zero,
 	&absorb_window,
@@ -4904,9 +4904,9 @@ void *python_language_feature_targets[5] = {
     #define GT(instr)
 #endif
 
-#define INSTRUMENT(prefix, suffix, instr) 	\
-	INSTR(prefix, suffix); 					\
-	GT(instr)
+#define INSTRUMENT(prefix, suffix, instr, gt) 	\
+	INSTR(prefix, suffix); 					    \
+	GT(gt)
 
 /* pow(v, w, x) */
 static PyObject *
@@ -5129,7 +5129,7 @@ long_pow(PyObject *v, PyObject *w, PyObject *x)
          */
         int pending = 0, blen = 0;
 
-#define ABSORB_PENDING(prefix, window_instr, trailing_instr) do { \
+#define ABSORB_PENDING(prefix, window_instr, trailing_instr, gt_window_instr, gt_trailing_instr) do { \
             int ntz = 0; /* number of trailing zeroes in `pending` */ \
             assert(pending && blen); \
             assert(pending >> (blen - 1)); \
@@ -5141,12 +5141,12 @@ long_pow(PyObject *v, PyObject *w, PyObject *x)
             assert(ntz < blen); \
             blen -= ntz; \
             do { \
-                INSTRUMENT(prefix, window, window_instr); \
+                INSTRUMENT(prefix, window, window_instr, gt_window_instr); \
                 MULT(z, z, z); \
             } while (--blen); \
             MULT(z, table[pending >> 1], z); \
             while (ntz-- > 0) {\
-				INSTRUMENT(prefix, trailing, trailing_instr); \
+				INSTRUMENT(prefix, trailing, trailing_instr, gt_trailing_instr); \
                 MULT(z, z, z); \
             } \
             assert(blen == 0); \
@@ -5161,17 +5161,17 @@ long_pow(PyObject *v, PyObject *w, PyObject *x)
                 if (pending) {
                     ++blen;
                     if (blen == EXP_WINDOW_SIZE)
-                        ABSORB_PENDING(absorb, INSTR_POW_WINDOW, INSTR_POW_TRAILING);
+                        ABSORB_PENDING(absorb, INSTR_POW_WINDOW, INSTR_POW_TRAILING, GT_INSTR_POW_WINDOW, GT_INSTR_POW_TRAILING);
                 }
                 else /* absorb strings of 0 bits */ {
-					INSTRUMENT(consume, zero, INSTR_POW_ZERO);
+					INSTRUMENT(consume, zero, INSTR_POW_ZERO, GT_INSTR_POW_ZERO);
                     MULT(z, z, z);
                 }
 
             }
         }
         if (pending)
-            ABSORB_PENDING(absorb_rest, INSTR_POW_REST_WINDOW, INSTR_POW_REST_TRAILING);
+            ABSORB_PENDING(absorb_rest, INSTR_POW_REST_WINDOW, INSTR_POW_REST_TRAILING, GT_INSTR_POW_REST_WINDOW, GT_INSTR_POW_REST_TRAILING);
     }
 
     if (negativeOutput && !_PyLong_IsZero(z)) {
