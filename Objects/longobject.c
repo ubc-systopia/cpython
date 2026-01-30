@@ -4880,11 +4880,11 @@ long_invmod(PyLongObject *a, PyLongObject *n)
 #if ENABLE_INSTR
 extern void *consume_zero, *absorb_window, *absorb_trailing, *absorb_rest_window, *absorb_rest_trailing;
 void *python_language_feature_targets[5] = {
-	&consume_zero,
-	&absorb_window,
-	&absorb_trailing,
-    &absorb_rest_window,
-    &absorb_rest_trailing,
+	[INSTR_POW_ZERO] = &consume_zero,
+	[INSTR_POW_WINDOW] = &absorb_window,
+	[INSTR_POW_TRAILING] = &absorb_trailing,
+	[INSTR_POW_REST_WINDOW] = &absorb_rest_window,
+	[INSTR_POW_REST_TRAILING] = &absorb_rest_trailing,
 };
 #endif
 

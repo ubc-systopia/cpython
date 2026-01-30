@@ -141,11 +141,11 @@
 #define ENABLE_IBPB     0
 
 #if defined(ENABLE_INSTR) || defined(ENABLE_GT)
-#define INSTR_POW_ZERO                      1
-#define INSTR_POW_WINDOW					2
-#define INSTR_POW_TRAILING					3
-#define INSTR_POW_REST_WINDOW				4
-#define INSTR_POW_REST_TRAILING			    5
+#define INSTR_POW_ZERO                      0
+#define INSTR_POW_WINDOW					1
+#define INSTR_POW_TRAILING					2
+#define INSTR_POW_REST_WINDOW				3
+#define INSTR_POW_REST_TRAILING			    4
 #endif
 
 #if ENABLE_INSTR
@@ -154,11 +154,11 @@ PyAPI_DATA(void) *python_language_feature_targets[5];
 #endif
 
 #if ENABLE_GT
-#define GT_INSTR_POW_ZERO                   INSTR_POW_ZERO << 8
-#define GT_INSTR_POW_WINDOW					INSTR_POW_WINDOW << 8
-#define GT_INSTR_POW_TRAILING				INSTR_POW_TRAILING << 8
-#define GT_INSTR_POW_REST_WINDOW			INSTR_POW_REST_WINDOW << 8
-#define GT_INSTR_POW_REST_TRAILING			INSTR_POW_REST_TRAILING << 8
+#define GT_INSTR_POW_ZERO                   (INSTR_POW_ZERO + 1 << 8)
+#define GT_INSTR_POW_WINDOW					(INSTR_POW_WINDOW + 1 << 8)
+#define GT_INSTR_POW_TRAILING				(INSTR_POW_TRAILING + 1 << 8)
+#define GT_INSTR_POW_REST_WINDOW			(INSTR_POW_REST_WINDOW + 1 << 8)
+#define GT_INSTR_POW_REST_TRAILING			(INSTR_POW_REST_TRAILING + 1 << 8)
 
 inline __attribute__((always_inline)) uint64_t python_rdtscp(void) {
 	uint64_t low, high;
