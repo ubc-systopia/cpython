@@ -4878,13 +4878,15 @@ long_invmod(PyLongObject *a, PyLongObject *n)
 }
 
 #if ENABLE_INSTR
-extern void *consume_zero, *absorb_window, *absorb_trailing, *absorb_rest_window, *absorb_rest_trailing;
-void *python_language_feature_targets[5] = {
-	[INSTR_POW_ZERO] = &consume_zero,
-	[INSTR_POW_WINDOW] = &absorb_window,
-	[INSTR_POW_TRAILING] = &absorb_trailing,
-	[INSTR_POW_REST_WINDOW] = &absorb_rest_window,
-	[INSTR_POW_REST_TRAILING] = &absorb_rest_trailing,
+extern void *base_case_short, *cond_case_short, *consume_zero, *absorb_window, *absorb_rest, *absorb_trailing_window, *absorb_trailing_rest;
+void *python_language_feature_targets[7] = {
+	&base_case_short,
+	&cond_case_short,
+	&consume_zero,
+	&absorb_window,
+	&absorb_rest,
+	&absorb_trailing_window,
+	&absorb_trailing_rest
 };
 #endif
 
@@ -4904,9 +4906,9 @@ void *python_language_feature_targets[5] = {
     #define GT(instr)
 #endif
 
-#define INSTRUMENT(prefix, suffix, instr, gt) 	\
-	INSTR(prefix, suffix); 					    \
-	GT(gt)
+#define INSTRUMENT(prefix, suffix, instr) 	\
+	INSTR(prefix, suffix); 					\
+	GT(instr)
 
 /* pow(v, w, x) */
 static PyObject *
@@ -5096,8 +5098,10 @@ long_pow(PyObject *v, PyObject *w, PyObject *x)
         }
         for (--i, bit >>= 1;;) {
             for (; bit != 0; bit >>= 1) {
+				INSTRUMENT(base, case_short, INSTR_POW_BASE_SHORT);
                 MULT(z, z, z);
                 if (bi & bit) {
+					INSTRUMENT(cond, case_short, INSTR_POW_COND_SHORT);
                     MULT(z, a, z);
                 }
             }
@@ -5129,7 +5133,7 @@ long_pow(PyObject *v, PyObject *w, PyObject *x)
          */
         int pending = 0, blen = 0;
 
-#define ABSORB_PENDING(prefix, window_instr, trailing_instr, gt_window_instr, gt_trailing_instr) do { \
+#define ABSORB_PENDING(suffix, window_instr, trailing_instr) do { \
             int ntz = 0; /* number of trailing zeroes in `pending` */ \
             assert(pending && blen); \
             assert(pending >> (blen - 1)); \
@@ -5141,12 +5145,12 @@ long_pow(PyObject *v, PyObject *w, PyObject *x)
             assert(ntz < blen); \
             blen -= ntz; \
             do { \
-                INSTRUMENT(prefix, window, window_instr, gt_window_instr); \
+                INSTRUMENT(absorb, suffix, window_instr); \
                 MULT(z, z, z); \
             } while (--blen); \
             MULT(z, table[pending >> 1], z); \
             while (ntz-- > 0) {\
-				INSTRUMENT(prefix, trailing, trailing_instr, gt_trailing_instr); \
+				INSTRUMENT(absorb_trailing, suffix, trailing_instr); \
                 MULT(z, z, z); \
             } \
             assert(blen == 0); \
@@ -5161,17 +5165,17 @@ long_pow(PyObject *v, PyObject *w, PyObject *x)
                 if (pending) {
                     ++blen;
                     if (blen == EXP_WINDOW_SIZE)
-                        ABSORB_PENDING(absorb, INSTR_POW_WINDOW, INSTR_POW_TRAILING, GT_INSTR_POW_WINDOW, GT_INSTR_POW_TRAILING);
+                        ABSORB_PENDING(window, INSTR_POW_WINDOW, INSTR_POW_TRAILING);
                 }
                 else /* absorb strings of 0 bits */ {
-					INSTRUMENT(consume, zero, INSTR_POW_ZERO, GT_INSTR_POW_ZERO);
+					INSTRUMENT(consume, zero, INSTR_POW_ZERO);
                     MULT(z, z, z);
                 }
 
             }
         }
         if (pending)
-            ABSORB_PENDING(absorb_rest, INSTR_POW_REST_WINDOW, INSTR_POW_REST_TRAILING, GT_INSTR_POW_REST_WINDOW, GT_INSTR_POW_REST_TRAILING);
+            ABSORB_PENDING(rest, INSTR_POW_WINDOW_REST, INSTR_POW_TRAILING_REST);
     }
 
     if (negativeOutput && !_PyLong_IsZero(z)) {
